@@ -56,13 +56,13 @@ function ShaderProgram(name, program) {
     this.prog = program;
 
     // Location of the attribute variable in the shader program.
-    this.iAttribVertex = 1;
-    this.iAttribVertexNormal = 1;
+    this.iAttribVertex = -1;
+    this.iAttribVertexNormal = -1;
     // Location of the uniform specifying a light position for the scene.
-    this.iLightPosition = 1;
+    this.iLightPosition = -1;
     // Location of the uniform matrix representing the combined transformation.
-    this.iModelViewProjectionMatrix = 1;
-    this.iModelNormalMatrix = 1;
+    this.iModelViewProjectionMatrix = -1;
+    this.iModelNormalMatrix = -1;
 
     this.Use = function () {
         gl.useProgram(this.prog);
@@ -101,7 +101,7 @@ function draw() {
     gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, modelViewProjection);
     gl.uniformMatrix4fv(shProgram.iModelNormalMatrix, false, modelNormal);
 
-    gl.uniform3fv(shProgram.iLightPosition, [3*Math.cos(Date.now() * 0.005), 3*Math.sin(Date.now() * 0.005), 1])
+    gl.uniform3fv(shProgram.iLightPosition, [3 * Math.cos(Date.now() * 0.005), 3 * Math.sin(Date.now() * 0.005), 1])
 
     surface.Draw();
 }
@@ -113,26 +113,27 @@ function draw2() {
 function CreateSurfaceData() {
     let vertexList = [];
     let u1 = 0;
-    let v = -Math.PI;
-    const LIMIT_U = Math.PI*2
-    const LIMIT_V = Math.PI
+    let v = 0;
+    const LIMIT_U = Math.PI * 2
+    const LIMIT_V = 4
     const INC = 0.25
-    while (u1 < LIMIT_U) {
-        while (v < LIMIT_V) {
-            const v1 = SnialSurfaceData(u1, v);
-            const v2 = SnialSurfaceData(u1 + INC, v);
-            const v3 = SnialSurfaceData(u1, v + INC);
-            const v4 = SnialSurfaceData(u1 + INC, v + INC);
+    while (v < LIMIT_V) {
+        while (u1 < LIMIT_U) {
+
+            const v1 = Wallis(u1, v);
+            const v2 = Wallis(u1 + INC, v);
+            const v3 = Wallis(u1, v + INC);
+            const v4 = Wallis(u1 + INC, v + INC);
             vertexList.push(v1.x, v1.y, v1.z)
             vertexList.push(v2.x, v2.y, v2.z)
             vertexList.push(v3.x, v3.y, v3.z)
             vertexList.push(v2.x, v2.y, v2.z)
             vertexList.push(v4.x, v4.y, v4.z)
             vertexList.push(v3.x, v3.y, v3.z)
-            v += INC
+            u1 += INC
         }
-        v = -Math.PI
-        u1 += INC
+        u1 = 0
+        v += INC
     }
     return vertexList;
 }
@@ -140,16 +141,17 @@ function CreateSurfaceData() {
 function CreateSurfaceNormalData() {
     let normals = [];
     let u1 = 0;
-    let v = -Math.PI;
-    const LIMIT_U = 9
-    const LIMIT_V = 9
+    let v = 0;
+    const LIMIT_U = Math.PI * 2
+    const LIMIT_V = 4
     const INC = 0.25
-    while (u1 < LIMIT_U) {
-        while (v < LIMIT_V) {
-            const v1 = SnialSurfaceData(u1, v);
-            const v2 = SnialSurfaceData(u1 + INC, v);
-            const v3 = SnialSurfaceData(u1, v + INC);
-            const v4 = SnialSurfaceData(u1 + INC, v + INC);
+    while (v < LIMIT_V) {
+        while (u1 < LIMIT_U) {
+
+            const v1 = Wallis(u1, v);
+            const v2 = Wallis(u1 + INC, v);
+            const v3 = Wallis(u1, v + INC);
+            const v4 = Wallis(u1 + INC, v + INC);
             const v21 = { x: v2.x - v1.x, y: v2.y - v1.y, z: v2.z - v1.z }
             const v31 = { x: v3.x - v1.x, y: v3.y - v1.y, z: v3.z - v1.z }
             const v42 = { x: v4.x - v2.x, y: v4.y - v2.y, z: v4.z - v2.z }
@@ -164,10 +166,10 @@ function CreateSurfaceNormalData() {
             normals.push(n2.x, n2.y, n2.z)
             normals.push(n2.x, n2.y, n2.z)
             normals.push(n2.x, n2.y, n2.z)
-            v += INC
+            u1 += INC
         }
-        v = -Math.PI
-        u1 += INC
+        u1 = 0
+        v += INC
     }
     return normals;
 }
@@ -182,15 +184,17 @@ function vec3Normalize(a) {
     var mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
     a.x /= mag; a.y /= mag; a.z /= mag;
 }
-
-function SnialSurfaceData(u, v) {
-    let x = u * Math.cos(u)
-    let y = u * Math.sin(u)
-    let z = v * Math.sqrt(v**2 - Math.cos(u)**2)
+const a = 1
+const b = 1
+const c = 2
+function Wallis(u, v) {
+    let x = v * Math.cos(u)
+    let y = v * Math.sin(u)
+    let z = c * Math.sqrt(a ** 2 - b ** 2 * Math.cos(u) ** 2)
     return {
-        x: x,
-        y: y,
-        z: z
+        x: 0.3 * x,
+        y: 0.3 * y,
+        z: 0.3 * z
     }
 }
 
